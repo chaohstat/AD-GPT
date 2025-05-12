@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Turn Chat</title>
+    <style>
+        /* General page styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 20px;
+            color: #333;
+        }
+
+        /* Chat container */
+        .chat-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+
+        /* Message area */
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+            background-color: #fafafa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            max-width: 70%;
+        }
+
+        .user {
+            background-color: #007bff;
+            color: white;
+            margin-left: auto;
+        }
+
+        .assistant {
+            background-color: #e9ecef;
+            color: black;
+            margin-right: auto;
+        }
+
+        /* Input area */
+        .input-area {
+            display: flex;
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+
+        textarea {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: none;
+        }
+
+        button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Multi-Turn Chat Assistant</h1>
+    <div class="chat-container">
+        <!-- Message Display -->
+        <div id="messages" class="messages"></div>
+        <!-- Input Section -->
+        <div class="input-area">
+            <textarea id="userInput" rows="2" placeholder="Type your message..."></textarea>
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const messagesDiv = document.getElementById("messages");
+        const userInput = document.getElementById("userInput");
+        const userId = "user123";  // Simulate a unique user ID (could be dynamic)
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // Append User Message
+            appendMessage("user", message);
+            userInput.value = "";  // Clear input box
+
+            try {
+                // Send POST request to FastAPI backend
+                const response = await fetch("http://127.0.0.1:8000/chat/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ user_id: userId, user_input: message }),
+                });
+
+                const data = await response.json();
+
+                // Append Assistant Response
+                appendMessage("assistant", data.response);
+            } catch (error) {
+                console.error("Error:", error);
+                appendMessage("assistant", "Something went wrong. Please try again.");
+            }
+
+            // Auto-scroll to the bottom
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function appendMessage(role, content) {
+            const messageDiv = document.createElement("div");
+            messageDiv.className = `message ${role}`;
+            // Replace '\n' with '<br>' for proper rendering
+            messageDiv.innerHTML = content.replace(/\n/g, "<br>");
+            messagesDiv.appendChild(messageDiv);
+        }
+    </script>
+</body>
+</html>
